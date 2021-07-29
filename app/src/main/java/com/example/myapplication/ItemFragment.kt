@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.content.Context
 import android.content.DialogInterface
 import android.content.res.Configuration
 import android.graphics.Canvas
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
@@ -23,6 +25,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.ItemTouchHelper
 import com.example.myapplication.placeholder.PlaceholderContent
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlin.math.roundToInt
 
 /**
@@ -51,11 +54,12 @@ class ItemFragment : Fragment() {
         var recyclerViewH: RecyclerView ?= null
         var currentViewHolder: RecyclerView.ViewHolder ?= null
         var canvas: Canvas ?= null
+        var showBottomSheet = false
+
+        var swipeBack = false
 
         val myCallback = object: ItemTouchHelper.SimpleCallback(0,
             ItemTouchHelper.RIGHT) {
-
-
             override fun onMove(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
@@ -65,8 +69,14 @@ class ItemFragment : Fragment() {
             }
 
 
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
 
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                Log.d("TEST_TAG", "Swi[ed")
+            }
+
+            override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+                super.onSelectedChanged(viewHolder, actionState)
+                Log.d("TEST_TAG", "Selecyio")
             }
 
             override fun clearView(
@@ -74,7 +84,11 @@ class ItemFragment : Fragment() {
                 viewHolder: RecyclerView.ViewHolder
             ) {
                 super.clearView(recyclerView, viewHolder)
+                if (showBottomSheet)  showBottomSheet(view.context)
+                showBottomSheet = false
+                Log.d("TEST_TAG", "Cleared")
             }
+
 
 
             override fun onChildDraw(
@@ -87,20 +101,23 @@ class ItemFragment : Fragment() {
                 isCurrentlyActive: Boolean
             ) {
 
+                recyclerView.setOnTouchListener { v, event ->
+                    swipeBack = event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL
+                    false
+                }
 
-                recyclerViewH = recyclerView
-                currentViewHolder = viewHolder
-                canvas = c
 
                 super.onChildDraw(c, recyclerView, viewHolder,
-                    dX / 2  , dY , actionState, isCurrentlyActive)
+                    dX / 4  , dY , actionState, isCurrentlyActive)
 
                 c.clipRect(0f, viewHolder.itemView.top.toFloat(),
-                    dX / 2, viewHolder.itemView.bottom.toFloat())
+                    dX / 4, viewHolder.itemView.bottom.toFloat())
 
-                if(dX < c.width / 3)
+                if(dX < c.width / 3){
                     c.drawColor(Color.GRAY)
+                }
                 else{
+                    showBottomSheet = true
                     c.drawColor(Color.RED)
                 }
 
@@ -115,6 +132,13 @@ class ItemFragment : Fragment() {
                 )
                 trashBinIcon.draw(c)
 
+            }
+
+            override fun convertToAbsoluteDirection(flags: Int, layoutDirection: Int): Int {
+                return if (swipeBack)
+                    0
+                else
+                    super.convertToAbsoluteDirection(flags, layoutDirection)
             }
 
 
@@ -166,11 +190,24 @@ class ItemFragment : Fragment() {
         })
         dialogBuilder.setView(dialogView)
 
-        alertDialog = dialogBuilder.create();
+        alertDialog = dialogBuilder.create()
         alertDialog.window!!.attributes.windowAnimations = R.style.Animation_AppCompat_Dialog
         alertDialog.show()
     }
 
+    private fun showBottomSheet(context: Context) {
+        val dialog = BottomSheetDialog(context)
+        val view = layoutInflater.inflate(R.layout.bottom_sheet, null)
+        val btnClose = view.findViewById<Button>(R.id.idBtnDismiss)
+
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.setCancelable(true)
+        dialog.setContentView(view)
+        dialog.show()
+    }
 
 
 }
