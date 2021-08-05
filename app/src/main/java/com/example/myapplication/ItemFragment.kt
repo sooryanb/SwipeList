@@ -59,7 +59,7 @@ class ItemFragment : Fragment() {
         var swipeBack = false
 
         val myCallback = object: ItemTouchHelper.SimpleCallback(0,
-            ItemTouchHelper.RIGHT) {
+            ItemTouchHelper.LEFT) {
             override fun onMove(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
@@ -108,27 +108,31 @@ class ItemFragment : Fragment() {
 
 
                 super.onChildDraw(c, recyclerView, viewHolder,
-                    dX / 4  , dY , actionState, isCurrentlyActive)
+                     dX / 4 ,  dY / 6, actionState, isCurrentlyActive)
 
-                c.clipRect(0f, viewHolder.itemView.top.toFloat(),
-                    dX / 4, viewHolder.itemView.bottom.toFloat())
 
-                if(dX < c.width / 3){
+                c.clipRect(viewHolder.itemView.right.toFloat() + dX / 3, viewHolder.itemView.top.toFloat(),
+                    viewHolder.itemView.right.toFloat(), viewHolder.itemView.bottom.toFloat())
+
+                if(-dX < c.width / 4){
                     c.drawColor(Color.GRAY)
                 }
                 else{
+                    Log.d("TWID", "${-dX}, ${c.width}, ${c.width / 4} ")
                     showBottomSheet = true
                     c.drawColor(Color.RED)
                 }
 
+                val height = viewHolder.itemView.bottom.toFloat() - viewHolder.itemView.top.toFloat()
+                val width = (height / 3).toInt()
+
                 val textMargin = resources.getDimension(R.dimen.text_margin)
                     .roundToInt()
                 trashBinIcon.bounds = Rect(
-                    textMargin,
-                    viewHolder.itemView.top + textMargin,
-                    textMargin + trashBinIcon.intrinsicWidth,
-                    viewHolder.itemView.top + trashBinIcon.intrinsicHeight
-                            + textMargin
+                    viewHolder.itemView.right - 2 * width - 16,
+                    viewHolder.itemView.top + width - 8 ,
+                    viewHolder.itemView.right - width,
+                    viewHolder.itemView.bottom - width + 8
                 )
                 trashBinIcon.draw(c)
 
