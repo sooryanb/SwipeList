@@ -35,6 +35,7 @@ class ItemFragment : Fragment() {
 
     private var columnCount = 1
     private lateinit var alertDialog: AlertDialog
+    private lateinit var adapter: ListItemAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +50,7 @@ class ItemFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_item_list, container, false)
+
 
         val trashBinIcon = resources.getDrawable(R.drawable.ic_baseline_delete_24, null)
         var recyclerViewH: RecyclerView ?= null
@@ -148,23 +150,37 @@ class ItemFragment : Fragment() {
 
         }
 
-        // Set the adapter
-        if (view is RecyclerView) {
-            with(view) {
-                layoutManager = when {
-                    columnCount <= 1 -> LinearLayoutManager(context)
-                    else -> GridLayoutManager(context, columnCount)
-                }
-                adapter = MyItemRecyclerViewAdapter(PlaceholderContent.ITEMS)
-                val myHelper = ItemTouchHelper(myCallback)
-                myHelper.attachToRecyclerView(this)
+        adapter = ListItemAdapter(PlaceholderContent.ITEMS)
+        val recyclerViewList = view.findViewById<RecyclerView>(R.id.list)
+        recyclerViewList.adapter = adapter
+        recyclerViewList.layoutManager = LinearLayoutManager(view.context, LinearLayoutManager.VERTICAL, false)
+        val myHelper = ItemTouchHelper(myCallback)
+        myHelper.attachToRecyclerView(recyclerViewList)
+
+        adapter.setItemClick(object : ListItemAdapter.OnItemClick{
+            override fun onItemClick(
+                item: PlaceholderContent.PlaceholderItem,
+                position: Int
+            ) {
+                if(adapter.selectedItemCount() > 0)
+                    toggleSelection(position)
             }
-        }
 
+            override fun onLongPress(
+                item: PlaceholderContent.PlaceholderItem,
+                position: Int
+            ) {
+                toggleSelection(position)
+            }
 
+        })
 
 
         return view
+    }
+
+    private fun toggleSelection(position: Int){
+        adapter.toggleSelection(position)
     }
 
     companion object {
@@ -212,6 +228,7 @@ class ItemFragment : Fragment() {
         dialog.setContentView(view)
         dialog.show()
     }
+
 
 
 }
