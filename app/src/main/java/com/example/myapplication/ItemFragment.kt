@@ -78,7 +78,6 @@ class ItemFragment : Fragment() {
 
             override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
                 super.onSelectedChanged(viewHolder, actionState)
-                Log.d("TEST_TAG", "Selecyio")
             }
 
             override fun clearView(
@@ -103,10 +102,15 @@ class ItemFragment : Fragment() {
                 isCurrentlyActive: Boolean
             ) {
 
-                recyclerView.setOnTouchListener { v, event ->
-                    swipeBack = event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL
-                    false
-                }
+//                recyclerView.setOnTouchListener { v, event ->
+////                    swipeBack = event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL
+////                    Log.d("INSIDESWIPE", "$swipeBack")
+////                    false
+////                }
+
+
+
+
 
 
                 super.onChildDraw(c, recyclerView, viewHolder,
@@ -116,8 +120,18 @@ class ItemFragment : Fragment() {
                 c.clipRect(viewHolder.itemView.right.toFloat() + dX / 3, viewHolder.itemView.top.toFloat(),
                     viewHolder.itemView.right.toFloat(), viewHolder.itemView.bottom.toFloat())
 
+                /*
+                * swipeBack should only be true when the item is swiped, ie when dX changes from 0 to -ve value.
+                * If swipe back is always true then the swiping wont happen so at not dragged state it should be false.
+                * Using this method rather onTouchListener method is because onTouch won't work with onClick and/or OnLongPress.
+                * */
+                swipeBack = false
+                if (-dX > 0) swipeBack = true
+
+
                 if(-dX < c.width / 4){
                     c.drawColor(Color.GRAY)
+                    Log.d("DXV", "$dX")
                 }
                 else{
                     Log.d("TWID", "${-dX}, ${c.width}, ${c.width / 4} ")
@@ -141,6 +155,7 @@ class ItemFragment : Fragment() {
             }
 
             override fun convertToAbsoluteDirection(flags: Int, layoutDirection: Int): Int {
+                Log.d("SWIPE_BACK", "$swipeBack")
                 return if (swipeBack)
                     0
                 else
@@ -154,6 +169,7 @@ class ItemFragment : Fragment() {
         val recyclerViewList = view.findViewById<RecyclerView>(R.id.list)
         recyclerViewList.adapter = adapter
         recyclerViewList.layoutManager = LinearLayoutManager(view.context, LinearLayoutManager.VERTICAL, false)
+
         val myHelper = ItemTouchHelper(myCallback)
         myHelper.attachToRecyclerView(recyclerViewList)
 
@@ -164,6 +180,8 @@ class ItemFragment : Fragment() {
             ) {
                 if(adapter.selectedItemCount() > 0)
                     toggleSelection(position)
+
+
             }
 
             override fun onLongPress(
